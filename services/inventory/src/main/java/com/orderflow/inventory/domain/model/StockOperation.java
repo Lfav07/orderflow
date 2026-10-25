@@ -29,4 +29,10 @@ public class StockOperation {
         }
         return quantity;
     }
+
+    public UUID getOperationId() { return operationId; }
+    public UUID getProductId() { return productId; }
+    public BigDecimal getQuantity() { return quantity; }
+    public StockOperationType getType() { return type; }
+    public Instant getCreatedAt() { return createdAt; }
 }
