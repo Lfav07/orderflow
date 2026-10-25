@@ -48,7 +48,7 @@ public class Product {
 
 
 
-    private String normalizeName(String name) {
+    private static String normalizeName(String name) {
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Name cannot be null or blank");
         String stripped = name.strip();
@@ -57,22 +57,23 @@ public class Product {
         return stripped;
     }
 
-    private String normalizeDescription(String description) {
+    private static String normalizeDescription(String description) {
         if (description == null) return null;
         String stripped = description.strip();
+        if (stripped.isEmpty()) return null;
         if (stripped.length() > MAX_DESCRIPTION_LENGTH)
             throw new LengthExceededException("Description too long");
         return stripped;
     }
 
-    private void validatePricePerUnit(BigDecimal price) {
+    private static void validatePricePerUnit(BigDecimal price) {
         if (price == null)
             throw new IllegalArgumentException("Price per unit cannot be null");
         if (price.compareTo(BigDecimal.ZERO) < 0)
             throw new NegativePriceException("Price per unit cannot be negative");
     }
 
-    private void validatePositiveQuantity(BigDecimal quantity) {
+    private static void validatePositiveQuantity(BigDecimal quantity) {
         if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0)
             throw new IllegalArgumentException("Quantity must be greater than zero");
     }
@@ -107,8 +108,6 @@ public class Product {
 
     public void changeDescription(String newDescription) {
         String normalized = normalizeDescription(newDescription);
-        if (normalized != null && normalized.isBlank()) normalized = null;
-
         if (Objects.equals(normalized, description)) return;
 
         this.description = normalized;
