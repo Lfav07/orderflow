@@ -27,12 +27,13 @@ class ProductTest {
     }
 
     @Test
-    void allowsNullDescriptionAndZeroInitialStockAndPrice() {
+    void normalizesNullOrBlankDescriptionAndAllowsZeroInitialStockAndPrice() {
         Product product = product("Café", null, "0", "0", ProductStatus.INACTIVE);
         Product blankDescription = product("Café", "   ", "0", "0", ProductStatus.INACTIVE);
 
         assertNull(product.getDescription());
         assertNull(blankDescription.getDescription());
+        assertEquals(blankDescription.getCreatedAt(), blankDescription.getUpdatedAt());
         assertEquals(BigDecimal.ZERO, product.getQuantityInStock());
         assertEquals(BigDecimal.ZERO, product.getPricePerUnit());
     }
@@ -113,8 +114,10 @@ class ProductTest {
 
         product.changeDescription("   ");
         assertNull(product.getDescription());
+        Instant beforeEquivalentDescription = product.getUpdatedAt();
         product.changeDescription(null);
         assertNull(product.getDescription());
+        assertEquals(beforeEquivalentDescription, product.getUpdatedAt());
     }
 
     @Test
