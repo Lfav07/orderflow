@@ -3,9 +3,11 @@ package com.orderflow.inventory.application.usecase;
 import com.orderflow.inventory.application.command.CreateProductCommand;
 import com.orderflow.inventory.domain.model.Product;
 import com.orderflow.inventory.domain.repository.ProductRepository;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
+@Component
 public class CreateProductUseCase {
     private final ProductRepository productRepository;
 
