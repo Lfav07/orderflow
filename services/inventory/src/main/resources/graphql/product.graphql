@@ -10,7 +10,60 @@ type Product {
     updatedAt: DateTime!
 }
 
+input CreateProductInput {
+    name: String!
+    description: String
+    quantityInStock: BigDecimal!
+    unit: ProductUnit!
+    pricePerUnit: BigDecimal!
+    status: ProductStatus!
+}
 
+input ChangeProductDescriptionInput {
+    id: ID!
+    description: String
+}
+
+input ChangeProductNameInput {
+    id: ID!
+    name: String!
+}
+
+input ChangeProductPriceInput {
+    id: ID!
+    pricePerUnit: BigDecimal!
+}
+
+input ChangeProductUnitInput {
+    id: ID!
+    unit: ProductUnit!
+}
+
+input ChangeStockInput {
+    id: ID!
+    quantity: BigDecimal!
+}
+
+input FilterProductsInput {
+    status: ProductStatus
+    name: String
+    unit: ProductUnit
+    page: Int = 0
+    size: Int = 20
+}
+
+input GetProductByIdInput {
+    id: ID!
+}
+
+input ListProductsInput {
+    page: Int = 0
+    size: Int = 20
+}
+
+input ProductIdInput {
+    id: ID!
+}
 
 
 scalar BigDecimal
