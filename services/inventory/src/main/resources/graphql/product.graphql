@@ -1,0 +1,28 @@
+type Product {
+    id: ID!
+    name: String!
+    description: String
+    quantityInStock: BigDecimal!
+    unit: ProductUnit!
+    pricePerUnit: BigDecimal!
+    status: ProductStatus!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+
+
+
+scalar BigDecimal
+scalar DateTime
+enum ProductUnit{
+    GRAMS
+    KILOGRAMS
+    LITERS
+    MILLILITERS
+    UNITS
+}
+enum ProductStatus{
+    ACTIVE
+    INACTIVE
+}
