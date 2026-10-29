@@ -65,6 +65,24 @@ input ProductIdInput {
     id: ID!
 }
 
+type Query {
+    productById(input: GetProductByIdInput!): Product!
+    listProducts(input: ListProductsInput!): [Product!]!
+    filterProducts(input: FilterProductsInput!): [Product!]!
+    availableStock(input: ProductIdInput!): BigDecimal!
+}
+
+type Mutation {
+    createProduct(input: CreateProductInput!): Product!
+    changeProductDescription(input: ChangeProductDescriptionInput!): Product!
+    changeProductName(input: ChangeProductNameInput!): Product!
+    changeProductPrice(input: ChangeProductPriceInput!): Product!
+    changeProductUnit(input: ChangeProductUnitInput!): Product!
+    increaseStock(input: ChangeStockInput!): Product!
+    decreaseStock(input: ChangeStockInput!): Product!
+    activateProduct(input: ProductIdInput!): Product!
+    deactivateProduct(input: ProductIdInput!): Product!
+}
 
 scalar BigDecimal
 scalar DateTime
