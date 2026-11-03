@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.orderflow.inventory.grpc";
+
+enum StockOperationType {
+  STOCK_OPERATION_TYPE_UNSPECIFIED = 0;
+  DEBIT = 1;
+  RETURN = 2;
+  ADJUSTMENT_IN = 3;
+  ADJUSTMENT_OUT = 4;
+}
+
+message StockOperationRequest {
+  string operation_id = 1;
+  string product_id = 2;
+  string quantity = 3;
+  StockOperationType type = 4;
+}
+
+message StockOperationResponse {
+  string temp = 1;
+}
+
+service StockService {
+  rpc ProcessStockOperation(StockOperationRequest)
+      returns (StockOperationResponse);
+}
