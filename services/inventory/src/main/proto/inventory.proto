@@ -8,9 +8,20 @@ message StockOperationRequest {
   string product_id = 2;
   string quantity = 3;
 }
+enum StockOperationType {
+  STOCK_OPERATION_TYPE_UNSPECIFIED = 0;
+  DEBIT = 1;
+  RETURN = 2;
+  ADJUSTMENT_IN = 3;
+  ADJUSTMENT_OUT = 4;
+}
 
 message StockOperationResponse {
-  string temp = 1;
+  string operation_id = 1;
+  string product_id = 2;
+  string quantity = 3;
+  StockOperationType type = 4;
+  string created_at = 5;
 }
 
 service StockService {
