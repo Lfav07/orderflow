@@ -26,16 +26,13 @@ public abstract class StockOperationUseCase {
     @Transactional
     public StockOperation execute(StockOperationCommand command) {
         Objects.requireNonNull(command, "Stock operation command cannot be null");
-        if (command.type() != expectedType) {
-            throw new IllegalArgumentException("Operation type must be " + expectedType);
-        }
 
         Product product = productRepository.findById(command.productId());
         applyStockChange(product, command.quantity());
         productRepository.save(product);
 
         StockOperation operation = new StockOperation(
-                command.operationId(), command.productId(), command.quantity(), command.type());
+                command.operationId(), command.productId(), command.quantity(), expectedType);
         return stockOperationRepository.save(operation);
     }
 

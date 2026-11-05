@@ -10,6 +10,5 @@ import java.util.UUID;
 public record StockOperationCommand(
         @NotNull UUID operationId,
         @NotNull UUID productId,
-        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal quantity,
-        @NotNull StockOperationType type
+        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal quantity
 ) {}
