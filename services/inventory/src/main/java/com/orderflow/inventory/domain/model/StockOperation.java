@@ -41,6 +41,14 @@ public class StockOperation {
                     "Quantity must be greater than zero"
             );
         }
+        BigDecimal significantQuantity = quantity.stripTrailingZeros();
+        if (significantQuantity.scale() > 3)
+            throw new IllegalArgumentException("Quantity supports at most 3 decimal places");
+
+        int integerDigits = Math.max(significantQuantity.precision() - significantQuantity.scale(), 0);
+        if (integerDigits > 16)
+            throw new IllegalArgumentException("Quantity exceeds the maximum precision of 19");
+
         return quantity;
     }
 

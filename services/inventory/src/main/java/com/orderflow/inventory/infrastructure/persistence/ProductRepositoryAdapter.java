@@ -3,6 +3,7 @@ package com.orderflow.inventory.infrastructure.persistence;
 import com.orderflow.inventory.domain.model.Product;
 import com.orderflow.inventory.domain.model.ProductStatus;
 import com.orderflow.inventory.domain.model.ProductUnit;
+import com.orderflow.inventory.domain.exception.ProductNotFoundException;
 import com.orderflow.inventory.domain.repository.ProductRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,7 +30,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
     public Product findById(UUID id) {
         return productJpaRepository.findById(id)
                 .map(ProductJpaMapper::toDomainEntity)
-                .orElse(null);
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
     @Override

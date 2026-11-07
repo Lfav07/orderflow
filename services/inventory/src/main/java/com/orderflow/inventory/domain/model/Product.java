@@ -30,7 +30,8 @@ public class Product {
             throw new IllegalArgumentException("Product fields cannot be null");
         if (quantityInStock.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Initial stock cannot be negative");
-        validatePricePerUnit(pricePerUnit);
+        BigDecimal normalizedQuantity = normalizeStockQuantity(quantityInStock);
+        BigDecimal normalizedPrice = validatePricePerUnit(pricePerUnit);
 
         String normalizedDescription = normalizeDescription(description);
         String normalizedName = normalizeName(name);
@@ -38,9 +39,9 @@ public class Product {
         this.id = UUID.randomUUID();
         this.name = normalizedName;
         this.description = normalizedDescription;
-        this.quantityInStock = quantityInStock;
+        this.quantityInStock = normalizedQuantity;
         this.unit = unit;
-        this.pricePerUnit = pricePerUnit;
+        this.pricePerUnit = normalizedPrice;
         this.status = status;
         this.createdAt = Instant.now();
         this.updatedAt = createdAt;
@@ -52,12 +53,12 @@ public class Product {
         this.id = Objects.requireNonNull(id, "Product id cannot be null");
         this.name = normalizeName(name);
         this.description = normalizeDescription(description);
-        this.quantityInStock = Objects.requireNonNull(quantityInStock, "Quantity cannot be null");
+        Objects.requireNonNull(quantityInStock, "Quantity cannot be null");
         if (quantityInStock.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Initial stock cannot be negative");
+        this.quantityInStock = normalizeStockQuantity(quantityInStock);
         this.unit = Objects.requireNonNull(unit, "Unit cannot be null");
-        validatePricePerUnit(pricePerUnit);
-        this.pricePerUnit = pricePerUnit;
+        this.pricePerUnit = validatePricePerUnit(pricePerUnit);
         this.status = Objects.requireNonNull(status, "Status cannot be null");
         this.createdAt = Objects.requireNonNull(createdAt, "Created at cannot be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "Updated at cannot be null");
@@ -91,16 +92,33 @@ public class Product {
         return stripped;
     }
 
-    private static void validatePricePerUnit(BigDecimal price) {
+    private static BigDecimal validatePricePerUnit(BigDecimal price) {
         if (price == null)
             throw new IllegalArgumentException("Price per unit cannot be null");
         if (price.compareTo(BigDecimal.ZERO) < 0)
             throw new NegativePriceException("Price per unit cannot be negative");
+        return normalizePrecision(price, 15, 2, "Price per unit");
     }
 
     private static void validatePositiveQuantity(BigDecimal quantity) {
         if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0)
             throw new IllegalArgumentException("Quantity must be greater than zero");
+    }
+
+    private static BigDecimal normalizeStockQuantity(BigDecimal quantity) {
+        return normalizePrecision(quantity, 19, 3, "Stock quantity");
+    }
+
+    private static BigDecimal normalizePrecision(BigDecimal value, int precision, int scale, String field) {
+        BigDecimal significantValue = value.stripTrailingZeros();
+        if (significantValue.scale() > scale)
+            throw new IllegalArgumentException(field + " supports at most " + scale + " decimal places");
+
+        int integerDigits = Math.max(significantValue.precision() - significantValue.scale(), 0);
+        if (integerDigits > precision - scale)
+            throw new IllegalArgumentException(field + " exceeds the maximum precision of " + precision);
+
+        return value;
     }
 
     private void updateTimestamp() {
@@ -111,16 +129,18 @@ public class Product {
 
     public void decreaseStock(BigDecimal quantity) {
         validatePositiveQuantity(quantity);
-        if (this.quantityInStock.compareTo(quantity) < 0)
+        BigDecimal normalizedQuantity = normalizeStockQuantity(quantity);
+        if (this.quantityInStock.compareTo(normalizedQuantity) < 0)
             throw new InsufficientStockException("Insufficient stock");
 
-        this.quantityInStock = this.quantityInStock.subtract(quantity);
+        this.quantityInStock = normalizeStockQuantity(this.quantityInStock.subtract(normalizedQuantity));
         updateTimestamp();
     }
 
     public void increaseStock(BigDecimal quantity) {
         validatePositiveQuantity(quantity);
-        this.quantityInStock = this.quantityInStock.add(quantity);
+        BigDecimal normalizedQuantity = normalizeStockQuantity(quantity);
+        this.quantityInStock = normalizeStockQuantity(this.quantityInStock.add(normalizedQuantity));
         updateTimestamp();
     }
 
@@ -147,9 +167,9 @@ public class Product {
     }
 
     public void changePricePerUnit(BigDecimal newPricePerUnit) {
-        validatePricePerUnit(newPricePerUnit);
-        if (pricePerUnit.compareTo(newPricePerUnit) == 0) return;
-        this.pricePerUnit = newPricePerUnit;
+        BigDecimal normalizedPrice = validatePricePerUnit(newPricePerUnit);
+        if (pricePerUnit.compareTo(normalizedPrice) == 0) return;
+        this.pricePerUnit = normalizedPrice;
         updateTimestamp();
     }
 

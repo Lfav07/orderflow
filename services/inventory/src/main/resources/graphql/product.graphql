@@ -10,6 +10,14 @@ type Product {
     updatedAt: DateTime!
 }
 
+type StockOperation {
+    operationId: ID!
+    productId: ID!
+    quantity: BigDecimal!
+    type: StockOperationType!
+    createdAt: DateTime!
+}
+
 input CreateProductInput {
     name: String!
     description: String
@@ -61,6 +69,17 @@ input ListProductsInput {
     size: Int = 20
 }
 
+input GetStockOperationByIdInput {
+    operationId: ID!
+}
+
+input ListStockOperationsInput {
+    productId: ID
+    type: StockOperationType
+    page: Int = 0
+    size: Int = 20
+}
+
 input ProductIdInput {
     id: ID!
 }
@@ -70,6 +89,8 @@ type Query {
     listProducts(input: ListProductsInput!): [Product!]!
     filterProducts(input: FilterProductsInput!): [Product!]!
     availableStock(input: ProductIdInput!): BigDecimal!
+    stockOperationById(input: GetStockOperationByIdInput!): StockOperation!
+    listStockOperations(input: ListStockOperationsInput!): [StockOperation!]!
 }
 
 type Mutation {
@@ -96,4 +117,10 @@ enum ProductUnit{
 enum ProductStatus{
     ACTIVE
     INACTIVE
+}
+enum StockOperationType {
+    DEBIT
+    RETURN
+    ADJUSTMENT_IN
+    ADJUSTMENT_OUT
 }

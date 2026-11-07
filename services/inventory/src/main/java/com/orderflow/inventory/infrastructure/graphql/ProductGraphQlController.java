@@ -8,6 +8,8 @@ import com.orderflow.inventory.application.command.ChangeStockCommand;
 import com.orderflow.inventory.application.command.CreateProductCommand;
 import com.orderflow.inventory.application.command.FilterProductsCommand;
 import com.orderflow.inventory.application.command.GetProductByIdCommand;
+import com.orderflow.inventory.application.command.GetStockOperationByIdCommand;
+import com.orderflow.inventory.application.command.ListStockOperationsCommand;
 import com.orderflow.inventory.application.command.ListProductsCommand;
 import com.orderflow.inventory.application.command.ProductIdCommand;
 import com.orderflow.inventory.application.usecase.ActivateProductUseCase;
@@ -21,9 +23,12 @@ import com.orderflow.inventory.application.usecase.DecreaseStockUseCase;
 import com.orderflow.inventory.application.usecase.FilterProductsUseCase;
 import com.orderflow.inventory.application.usecase.GetAvailableStockUseCase;
 import com.orderflow.inventory.application.usecase.GetProductByIdUseCase;
+import com.orderflow.inventory.application.usecase.GetStockOperationByIdUseCase;
 import com.orderflow.inventory.application.usecase.IncreaseStockUseCase;
 import com.orderflow.inventory.application.usecase.ListProductsUseCase;
+import com.orderflow.inventory.application.usecase.ListStockOperationsUseCase;
 import com.orderflow.inventory.domain.model.Product;
+import com.orderflow.inventory.domain.model.StockOperation;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -51,6 +56,8 @@ public class ProductGraphQlController {
     private final DecreaseStockUseCase decreaseStockUseCase;
     private final ActivateProductUseCase activateProductUseCase;
     private final DeactivateProductUseCase deactivateProductUseCase;
+    private final GetStockOperationByIdUseCase getStockOperationByIdUseCase;
+    private final ListStockOperationsUseCase listStockOperationsUseCase;
 
     public ProductGraphQlController(
             GetProductByIdUseCase getProductByIdUseCase,
@@ -65,7 +72,9 @@ public class ProductGraphQlController {
             IncreaseStockUseCase increaseStockUseCase,
             DecreaseStockUseCase decreaseStockUseCase,
             ActivateProductUseCase activateProductUseCase,
-            DeactivateProductUseCase deactivateProductUseCase) {
+            DeactivateProductUseCase deactivateProductUseCase,
+            GetStockOperationByIdUseCase getStockOperationByIdUseCase,
+            ListStockOperationsUseCase listStockOperationsUseCase) {
         this.getProductByIdUseCase = getProductByIdUseCase;
         this.listProductsUseCase = listProductsUseCase;
         this.filterProductsUseCase = filterProductsUseCase;
@@ -79,6 +88,8 @@ public class ProductGraphQlController {
         this.decreaseStockUseCase = decreaseStockUseCase;
         this.activateProductUseCase = activateProductUseCase;
         this.deactivateProductUseCase = deactivateProductUseCase;
+        this.getStockOperationByIdUseCase = getStockOperationByIdUseCase;
+        this.listStockOperationsUseCase = listStockOperationsUseCase;
     }
 
     @QueryMapping
@@ -99,6 +110,16 @@ public class ProductGraphQlController {
     @QueryMapping
     public BigDecimal availableStock(@Argument("input") ProductIdCommand input) {
         return getAvailableStockUseCase.execute(input);
+    }
+
+    @QueryMapping
+    public StockOperation stockOperationById(@Argument("input") GetStockOperationByIdCommand input) {
+        return getStockOperationByIdUseCase.execute(input);
+    }
+
+    @QueryMapping
+    public List<StockOperation> listStockOperations(@Argument("input") ListStockOperationsCommand input) {
+        return listStockOperationsUseCase.execute(input);
     }
 
     @MutationMapping
@@ -154,5 +175,10 @@ public class ProductGraphQlController {
     @SchemaMapping(typeName = "Product", field = "updatedAt")
     public OffsetDateTime updatedAt(Product product) {
         return product.getUpdatedAt().atOffset(ZoneOffset.UTC);
+    }
+
+    @SchemaMapping(typeName = "StockOperation", field = "createdAt")
+    public OffsetDateTime stockOperationCreatedAt(StockOperation operation) {
+        return operation.getCreatedAt().atOffset(ZoneOffset.UTC);
     }
 }
