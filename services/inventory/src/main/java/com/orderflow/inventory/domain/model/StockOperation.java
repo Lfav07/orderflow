@@ -20,6 +20,20 @@ public class StockOperation {
         this.createdAt = Instant.now();
     }
 
+    private StockOperation(UUID operationId, UUID productId, BigDecimal quantity,
+                           StockOperationType type, Instant createdAt) {
+        this.operationId = Objects.requireNonNull(operationId, "Operation id cannot be null");
+        this.productId = Objects.requireNonNull(productId, "Product id cannot be null");
+        this.quantity = validateQuantity(quantity);
+        this.type = Objects.requireNonNull(type, "Operation type cannot be null");
+        this.createdAt = Objects.requireNonNull(createdAt, "Created at cannot be null");
+    }
+
+    public static StockOperation rehydrate(UUID operationId, UUID productId, BigDecimal quantity,
+                                           StockOperationType type, Instant createdAt) {
+        return new StockOperation(operationId, productId, quantity, type, createdAt);
+    }
+
     private static BigDecimal validateQuantity(BigDecimal quantity) {
         Objects.requireNonNull(quantity, "Quantity cannot be null");
         if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
