@@ -46,6 +46,31 @@ public class Product {
         this.updatedAt = createdAt;
     }
 
+    private Product(UUID id, String name, String description, BigDecimal quantityInStock,
+                    ProductUnit unit, BigDecimal pricePerUnit, ProductStatus status,
+                    Instant createdAt, Instant updatedAt) {
+        this.id = Objects.requireNonNull(id, "Product id cannot be null");
+        this.name = normalizeName(name);
+        this.description = normalizeDescription(description);
+        this.quantityInStock = Objects.requireNonNull(quantityInStock, "Quantity cannot be null");
+        if (quantityInStock.compareTo(BigDecimal.ZERO) < 0)
+            throw new IllegalArgumentException("Initial stock cannot be negative");
+        this.unit = Objects.requireNonNull(unit, "Unit cannot be null");
+        validatePricePerUnit(pricePerUnit);
+        this.pricePerUnit = pricePerUnit;
+        this.status = Objects.requireNonNull(status, "Status cannot be null");
+        this.createdAt = Objects.requireNonNull(createdAt, "Created at cannot be null");
+        this.updatedAt = Objects.requireNonNull(updatedAt, "Updated at cannot be null");
+    }
+
+    public static Product rehydrate(UUID id, String name, String description,
+                                    BigDecimal quantityInStock, ProductUnit unit,
+                                    BigDecimal pricePerUnit, ProductStatus status,
+                                    Instant createdAt, Instant updatedAt) {
+        return new Product(id, name, description, quantityInStock, unit, pricePerUnit,
+                status, createdAt, updatedAt);
+    }
+
 
 
     private static String normalizeName(String name) {
