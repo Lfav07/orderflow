@@ -2,4 +2,14 @@ spring:
   application:
     name: inventory
   flyway:
+    enabled: true
     locations: classpath:db/migration
+    baseline-on-migrate: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orderflow-inventory
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
