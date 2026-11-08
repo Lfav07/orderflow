@@ -71,6 +71,56 @@ class ProductTest {
     }
 
     @Test
+    void enforcesStockAndPricePrecisionAndScaleBoundaries() {
+        Product atMaximumPrecision = product("Item", null,
+                "9999999999999999.999", "9999999999999.99", ProductStatus.ACTIVE);
+
+        assertEquals(new BigDecimal("9999999999999999.999"), atMaximumPrecision.getQuantityInStock());
+        assertEquals(new BigDecimal("9999999999999.99"), atMaximumPrecision.getPricePerUnit());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> product("Item", null, "10000000000000000", "0", ProductStatus.ACTIVE));
+        assertThrows(IllegalArgumentException.class,
+                () -> product("Item", null, "1.0001", "0", ProductStatus.ACTIVE));
+        assertThrows(IllegalArgumentException.class,
+                () -> product("Item", null, "0", "10000000000000.00", ProductStatus.ACTIVE));
+        assertThrows(IllegalArgumentException.class,
+                () -> product("Item", null, "0", "0.001", ProductStatus.ACTIVE));
+    }
+
+    @Test
+    void rehydratesProductWithoutChangingItsIdentityOrTimestamps() {
+        var id = java.util.UUID.randomUUID();
+        Instant createdAt = Instant.parse("2025-01-02T03:04:05Z");
+        Instant updatedAt = Instant.parse("2025-02-03T04:05:06Z");
+
+        Product product = Product.rehydrate(id, "  Item  ", "  Description  ",
+                new BigDecimal("3.250"), ProductUnit.UNITS, new BigDecimal("4.50"),
+                ProductStatus.INACTIVE, createdAt, updatedAt);
+
+        assertEquals(id, product.getId());
+        assertEquals("Item", product.getName());
+        assertEquals("Description", product.getDescription());
+        assertEquals(new BigDecimal("3.250"), product.getQuantityInStock());
+        assertEquals(ProductStatus.INACTIVE, product.getStatus());
+        assertEquals(createdAt, product.getCreatedAt());
+        assertEquals(updatedAt, product.getUpdatedAt());
+    }
+
+    @Test
+    void rejectsInvalidPersistedProductStateDuringRehydration() {
+        var id = java.util.UUID.randomUUID();
+        Instant timestamp = Instant.parse("2025-01-02T03:04:05Z");
+
+        assertThrows(IllegalArgumentException.class, () -> Product.rehydrate(id, "Item", null,
+                new BigDecimal("-1"), ProductUnit.UNITS, BigDecimal.ZERO, ProductStatus.ACTIVE,
+                timestamp, timestamp));
+        assertThrows(NullPointerException.class, () -> Product.rehydrate(id, "Item", null,
+                BigDecimal.ONE, ProductUnit.UNITS, BigDecimal.ZERO, ProductStatus.ACTIVE,
+                null, timestamp));
+    }
+
+    @Test
     void decreasesAndIncreasesStockAndUpdatesTimestamp() {
         Product product = product("Item", null, "5", "2", ProductStatus.ACTIVE);
         Instant originalUpdatedAt = product.getUpdatedAt();

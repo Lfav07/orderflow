@@ -14,6 +14,7 @@ public class Product {
     private static final int MAX_DESCRIPTION_LENGTH = 300;
 
     private final UUID id;
+    private final Long version;
     private String name;
     private String description;
     private BigDecimal quantityInStock;
@@ -37,6 +38,7 @@ public class Product {
         String normalizedName = normalizeName(name);
 
         this.id = UUID.randomUUID();
+        this.version = null;
         this.name = normalizedName;
         this.description = normalizedDescription;
         this.quantityInStock = normalizedQuantity;
@@ -49,8 +51,9 @@ public class Product {
 
     private Product(UUID id, String name, String description, BigDecimal quantityInStock,
                     ProductUnit unit, BigDecimal pricePerUnit, ProductStatus status,
-                    Instant createdAt, Instant updatedAt) {
+                    Instant createdAt, Instant updatedAt, Long version) {
         this.id = Objects.requireNonNull(id, "Product id cannot be null");
+        this.version = version;
         this.name = normalizeName(name);
         this.description = normalizeDescription(description);
         Objects.requireNonNull(quantityInStock, "Quantity cannot be null");
@@ -68,8 +71,16 @@ public class Product {
                                     BigDecimal quantityInStock, ProductUnit unit,
                                     BigDecimal pricePerUnit, ProductStatus status,
                                     Instant createdAt, Instant updatedAt) {
+        return rehydrate(id, name, description, quantityInStock, unit, pricePerUnit,
+                status, createdAt, updatedAt, null);
+    }
+
+    public static Product rehydrate(UUID id, String name, String description,
+                                    BigDecimal quantityInStock, ProductUnit unit,
+                                    BigDecimal pricePerUnit, ProductStatus status,
+                                    Instant createdAt, Instant updatedAt, Long version) {
         return new Product(id, name, description, quantityInStock, unit, pricePerUnit,
-                status, createdAt, updatedAt);
+                status, createdAt, updatedAt, version);
     }
 
 
@@ -186,6 +197,7 @@ public class Product {
     }
 
     public UUID getId() { return id; }
+    public Long getVersion() { return version; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public BigDecimal getQuantityInStock() { return quantityInStock; }

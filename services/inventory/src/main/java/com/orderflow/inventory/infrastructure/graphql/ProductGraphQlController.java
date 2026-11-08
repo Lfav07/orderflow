@@ -29,6 +29,7 @@ import com.orderflow.inventory.application.usecase.ListProductsUseCase;
 import com.orderflow.inventory.application.usecase.ListStockOperationsUseCase;
 import com.orderflow.inventory.domain.model.Product;
 import com.orderflow.inventory.domain.model.StockOperation;
+import jakarta.validation.Valid;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -93,77 +94,77 @@ public class ProductGraphQlController {
     }
 
     @QueryMapping
-    public Product productById(@Argument("input") GetProductByIdCommand input) {
+    public Product productById(@Argument("input") @Valid GetProductByIdCommand input) {
         return getProductByIdUseCase.execute(input);
     }
 
     @QueryMapping
-    public List<Product> listProducts(@Argument("input") ListProductsCommand input) {
+    public List<Product> listProducts(@Argument("input") @Valid ListProductsCommand input) {
         return listProductsUseCase.execute(input);
     }
 
     @QueryMapping
-    public List<Product> filterProducts(@Argument("input") FilterProductsCommand input) {
+    public List<Product> filterProducts(@Argument("input") @Valid FilterProductsCommand input) {
         return filterProductsUseCase.execute(input);
     }
 
     @QueryMapping
-    public BigDecimal availableStock(@Argument("input") ProductIdCommand input) {
+    public BigDecimal availableStock(@Argument("input") @Valid ProductIdCommand input) {
         return getAvailableStockUseCase.execute(input);
     }
 
     @QueryMapping
-    public StockOperation stockOperationById(@Argument("input") GetStockOperationByIdCommand input) {
+    public StockOperation stockOperationById(@Argument("input") @Valid GetStockOperationByIdCommand input) {
         return getStockOperationByIdUseCase.execute(input);
     }
 
     @QueryMapping
-    public List<StockOperation> listStockOperations(@Argument("input") ListStockOperationsCommand input) {
+    public List<StockOperation> listStockOperations(@Argument("input") @Valid ListStockOperationsCommand input) {
         return listStockOperationsUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product createProduct(@Argument("input") CreateProductCommand input) {
+    public Product createProduct(@Argument("input") @Valid CreateProductCommand input) {
         return createProductUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product changeProductDescription(@Argument("input") ChangeProductDescriptionCommand input) {
+    public Product changeProductDescription(@Argument("input") @Valid ChangeProductDescriptionCommand input) {
         return changeProductDescriptionUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product changeProductName(@Argument("input") ChangeProductNameCommand input) {
+    public Product changeProductName(@Argument("input") @Valid ChangeProductNameCommand input) {
         return changeProductNameUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product changeProductPrice(@Argument("input") ChangeProductPriceCommand input) {
+    public Product changeProductPrice(@Argument("input") @Valid ChangeProductPriceCommand input) {
         return changeProductPriceUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product changeProductUnit(@Argument("input") ChangeProductUnitCommand input) {
+    public Product changeProductUnit(@Argument("input") @Valid ChangeProductUnitCommand input) {
         return changeProductUnitUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product increaseStock(@Argument("input") ChangeStockCommand input) {
+    public Product increaseStock(@Argument("input") @Valid ChangeStockCommand input) {
         return increaseStockUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product decreaseStock(@Argument("input") ChangeStockCommand input) {
+    public Product decreaseStock(@Argument("input") @Valid ChangeStockCommand input) {
         return decreaseStockUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product activateProduct(@Argument("input") ProductIdCommand input) {
+    public Product activateProduct(@Argument("input") @Valid ProductIdCommand input) {
         return activateProductUseCase.execute(input);
     }
 
     @MutationMapping
-    public Product deactivateProduct(@Argument("input") ProductIdCommand input) {
+    public Product deactivateProduct(@Argument("input") @Valid ProductIdCommand input) {
         return deactivateProductUseCase.execute(input);
     }
 

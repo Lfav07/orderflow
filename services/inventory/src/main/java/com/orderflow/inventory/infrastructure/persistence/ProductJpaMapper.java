@@ -6,6 +6,7 @@ public class ProductJpaMapper {
     public static ProductJpaEntity toProductJpaEntity(Product product) {
         ProductJpaEntity entity = new ProductJpaEntity();
         entity.setId(product.getId());
+        entity.setVersion(product.getVersion());
         entity.setName(product.getName());
         entity.setDescription(product.getDescription());
         entity.setPricePerUnit(product.getPricePerUnit());
@@ -29,7 +30,8 @@ public class ProductJpaMapper {
                 entity.getPricePerUnit(),
                 entity.getStatus(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getVersion()
         );
     }
 }
