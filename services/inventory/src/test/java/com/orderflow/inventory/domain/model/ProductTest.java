@@ -147,6 +147,18 @@ class ProductTest {
     }
 
     @Test
+    void allowsExactStockDepletionAndRejectsOverflowWithoutChangingStock() {
+        Product product = product("Item", null, "2.125", "1", ProductStatus.ACTIVE);
+
+        product.decreaseStock(new BigDecimal("2.125"));
+
+        assertEquals(0, product.getQuantityInStock().compareTo(BigDecimal.ZERO));
+        assertThrows(IllegalArgumentException.class,
+                () -> product.increaseStock(new BigDecimal("10000000000000000")));
+        assertEquals(0, product.getQuantityInStock().compareTo(BigDecimal.ZERO));
+    }
+
+    @Test
     void changesProductAttributesAndNormalizesDescription() {
         Product product = product("Item", "Descrição", "1", "2", ProductStatus.INACTIVE);
 
