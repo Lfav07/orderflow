@@ -15,7 +15,7 @@ pipeline {
 
         stage('Build & Test - Inventory') {
             steps {
-                dir('inventory-service') {
+                dir('services/inventory') {
                     sh 'mvn -B clean verify'
                 }
             }
