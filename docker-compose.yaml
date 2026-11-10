@@ -5,11 +5,19 @@ services:
       dockerfile: Dockerfile.jenkins
     container_name: orderflow-jenkins
     restart: unless-stopped
+    # Jenkins uses the host Docker daemon so Testcontainers can start sibling containers.
+    group_add:
+      - "${DOCKER_GID:-999}"
+    environment:
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8083:8080"
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   jenkins_home:

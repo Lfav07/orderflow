@@ -13,6 +13,12 @@ pipeline {
             }
         }
 
+        stage('Check Docker') {
+            steps {
+                sh 'docker info'
+            }
+        }
+
         stage('Build & Test - Inventory') {
             steps {
                 dir('services/inventory') {
