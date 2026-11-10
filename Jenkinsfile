@@ -1,5 +1,10 @@
+
 pipeline {
     agent any
+
+    options {
+        timestamps()
+    }
 
     stages {
         stage('Checkout') {
@@ -8,21 +13,22 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build & Test - Inventory') {
             steps {
-                echo 'Código obtido com sucesso!'
-                sh 'mvn -version'
+                dir('inventory-service') {
+                    sh 'mvn -B clean verify'
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline executado com sucesso!'
+            echo 'Inventory CI pipeline ran successfully!'
         }
 
         failure {
-            echo 'Pipeline falhou!'
+            echo 'Inventory CI pipeline failed!'
         }
     }
 }
