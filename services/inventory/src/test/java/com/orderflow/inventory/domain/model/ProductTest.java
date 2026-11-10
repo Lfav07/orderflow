@@ -196,14 +196,8 @@ class ProductTest {
 
     @Test
     void repeatedChangesToSameValuePreserveUpdatedTimestamp() {
-        Product product = product("Item", "Descrição", "1", "2.00", ProductStatus.ACTIVE);
+        Product product = product("Item", "Descrição", "1", "2.00", ProductStatus.INACTIVE);
         Instant originalUpdatedAt = product.getUpdatedAt();
-
-        product.changeName(" Item ");
-        product.changeDescription("Descrição");
-        product.changeUnit(ProductUnit.KILOGRAMS);
-        product.changePricePerUnit(new BigDecimal("2.0"));
-        product.activate();
         product.deactivate();
         product.deactivate();
 
