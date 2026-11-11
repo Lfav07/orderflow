@@ -80,5 +80,6 @@ fabric.properties
 
 .agents
 plans
+JENKINS.md
 .idea/caches/build_file_checksums.ser
 
