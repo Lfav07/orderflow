@@ -5,11 +5,13 @@ USER root
 ENV MAVEN_VERSION=3.9.14
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl docker.io \
+    && apt-get install -y --no-install-recommends ca-certificates curl docker-cli \
     && curl -fsSL "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
         | tar -xz -C /opt \
     && ln -s "/opt/apache-maven-${MAVEN_VERSION}/bin/mvn" /usr/local/bin/mvn \
+    && groupadd --force docker \
     && usermod -aG docker jenkins \
+    && docker --version \
     && rm -rf /var/lib/apt/lists/*
 
 USER jenkins
