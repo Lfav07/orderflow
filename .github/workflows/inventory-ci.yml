@@ -1,0 +1,48 @@
+name: Inventory CI
+
+on:
+  push:
+    paths:
+      - 'services/inventory/**'
+      - '.github/workflows/inventory-ci.yml'
+  pull_request:
+    paths:
+      - 'services/inventory/**'
+      - '.github/workflows/inventory-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: services/inventory
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: services/inventory/pom.xml
+
+      - name: Check Docker
+        run: docker info
+
+      - name: Build and test inventory
+        working-directory: services/inventory
+        run: mvn -B clean verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-test-reports
+          path: |
+            services/inventory/target/surefire-reports/TEST-*.xml
+            services/inventory/target/failsafe-reports/TEST-*.xml
+          if-no-files-found: ignore
