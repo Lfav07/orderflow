@@ -1,6 +1,6 @@
 
 pipeline {
-    agent any
+    agent { label 'docker' }
 
     options {
         timestamps()
@@ -29,6 +29,10 @@ pipeline {
     }
 
     post {
+        always {
+            junit allowEmptyResults: true, testResults: 'services/inventory/target/surefire-reports/TEST-*.xml, services/inventory/target/failsafe-reports/TEST-*.xml'
+        }
+
         success {
             echo 'Inventory CI pipeline ran successfully!'
         }
