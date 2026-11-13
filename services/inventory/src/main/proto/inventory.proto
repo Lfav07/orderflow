@@ -24,11 +24,23 @@ message StockOperationResponse {
   string created_at = 5;
 }
 
+message CheckStockAvailabilityRequest {
+  string product_id = 1;
+  string quantity = 2;
+}
+
+message CheckStockAvailabilityResponse {
+  string product_id = 1;
+  bool available = 2;
+}
+
 service StockService {
   rpc DebitStock(StockOperationRequest)
       returns (StockOperationResponse);
   rpc ReturnStock(StockOperationRequest)
       returns (StockOperationResponse);
+  rpc CheckStockAvailability(CheckStockAvailabilityRequest)
+      returns (CheckStockAvailabilityResponse);
 }
 
 message GetProductPriceRequest {

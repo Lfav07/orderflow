@@ -138,6 +138,11 @@ public class Product {
 
 
 
+    public boolean hasEnoughStock(BigDecimal quantity) {
+        validatePositiveQuantity(quantity);
+        return quantityInStock.compareTo(normalizeStockQuantity(quantity)) >= 0;
+    }
+
     public void decreaseStock(BigDecimal quantity) {
         validatePositiveQuantity(quantity);
         BigDecimal normalizedQuantity = normalizeStockQuantity(quantity);

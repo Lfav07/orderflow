@@ -59,6 +59,40 @@ class StockGrpcTransportIT extends PostgresTestSupport {
     }
 
     @Test
+    void stockAvailabilityChecksExactAndInsufficientQuantitiesWithoutChangingStock() {
+        Product product = saveProduct("4.5");
+        String id = product.getId().toString();
+
+        var exact = stub.checkStockAvailability(availabilityRequest(id, "4.500"));
+        assertEquals(id, exact.getProductId());
+        assertTrue(exact.getAvailable());
+        assertFalse(stub.checkStockAvailability(availabilityRequest(id, "4.501")).getAvailable());
+        assertEquals(0, products.findById(product.getId()).getQuantityInStock().compareTo(new BigDecimal("4.5")));
+    }
+
+    @Test
+    void stockAvailabilityMapsInvalidRequestsAndMissingProducts() {
+        Product product = saveProduct("4.5");
+        String id = product.getId().toString();
+        for (String quantity : List.of("", "bad", "0", "-1", "0.0001")) {
+            var error = assertThrows(StatusRuntimeException.class,
+                    () -> stub.checkStockAvailability(availabilityRequest(id, quantity)));
+            assertEquals(Status.Code.INVALID_ARGUMENT, error.getStatus().getCode(), quantity);
+        }
+        var invalidId = assertThrows(StatusRuntimeException.class,
+                () -> stub.checkStockAvailability(availabilityRequest("bad-id", "1")));
+        assertEquals(Status.Code.INVALID_ARGUMENT, invalidId.getStatus().getCode());
+        var missing = assertThrows(StatusRuntimeException.class,
+                () -> stub.checkStockAvailability(availabilityRequest(UUID.randomUUID().toString(), "1")));
+        assertEquals(Status.Code.NOT_FOUND, missing.getStatus().getCode());
+    }
+
+    private static com.orderflow.inventory.grpc.CheckStockAvailabilityRequest availabilityRequest(String id, String quantity) {
+        return com.orderflow.inventory.grpc.CheckStockAvailabilityRequest.newBuilder()
+                .setProductId(id).setQuantity(quantity).build();
+    }
+
+    @Test
     void productPriceRpcReturnsPersistedDecimalPrice() {
         Product product = saveProduct("10");
         product.changePricePerUnit(new BigDecimal("12.50"));
