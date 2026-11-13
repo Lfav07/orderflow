@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class OrderTest {
     @Test
     void progressesThroughSuccessfulDelivery() {
-        Order order = new Order(List.of(new OrderItem(UUID.randomUUID(), BigDecimal.ONE, BigDecimal.TEN)));
+        UUID orderId = UUID.randomUUID();
+        Order order = new Order(orderId, List.of(new OrderItem(orderId, UUID.randomUUID(), BigDecimal.ONE, BigDecimal.TEN)));
 
         order.markWaitingDelivery();
         assertEquals(OrderStatus.WAITING_DELIVERY, order.getStatus());
@@ -32,10 +33,11 @@ class OrderTest {
 
     @Test
     void sumsMultipleItemsAndInitializesNewOrder() {
-        OrderItem first = new OrderItem(UUID.randomUUID(), new BigDecimal("2"), new BigDecimal("3.50"));
-        OrderItem second = new OrderItem(UUID.randomUUID(), new BigDecimal("0.5"), new BigDecimal("4.00"));
+        UUID orderId = UUID.randomUUID();
+        OrderItem first = new OrderItem(orderId, UUID.randomUUID(), new BigDecimal("2"), new BigDecimal("3.50"));
+        OrderItem second = new OrderItem(orderId, UUID.randomUUID(), new BigDecimal("0.5"), new BigDecimal("4.00"));
         Instant before = Instant.now();
-        Order order = new Order(List.of(first, second));
+        Order order = new Order(orderId, List.of(first, second));
         Instant after = Instant.now();
 
         assertNotNull(order.getId());
@@ -50,15 +52,15 @@ class OrderTest {
 
     @Test
     void rejectsNullAndEmptyOrderFields() {
-        OrderItem item = new OrderItem(UUID.randomUUID(), BigDecimal.ONE, BigDecimal.ONE);
         UUID id = UUID.randomUUID();
+        OrderItem item = new OrderItem(id, UUID.randomUUID(), BigDecimal.ONE, BigDecimal.ONE);
         Instant now = Instant.now();
         List<OrderItem> itemsWithNull = new ArrayList<>();
         itemsWithNull.add(null);
 
-        assertThrows(NullPointerException.class, () -> new Order(null));
-        assertThrows(IllegalArgumentException.class, () -> new Order(List.of()));
-        assertThrows(NullPointerException.class, () -> new Order(itemsWithNull));
+        assertThrows(NullPointerException.class, () -> new Order(id, null));
+        assertThrows(IllegalArgumentException.class, () -> new Order(UUID.randomUUID(), List.of()));
+        assertThrows(NullPointerException.class, () -> new Order(id, itemsWithNull));
         assertThrows(NullPointerException.class, () -> Order.rehydrate(null, OrderStatus.WAITING_PAYMENT, List.of(item), null, now, now));
         assertThrows(NullPointerException.class, () -> Order.rehydrate(id, null, List.of(item), null, now, now));
         assertThrows(NullPointerException.class, () -> Order.rehydrate(id, OrderStatus.WAITING_PAYMENT, null, null, now, now));
@@ -121,15 +123,17 @@ class OrderTest {
     }
 
     private static Order orderWithStatus(OrderStatus status) {
-        OrderItem item = new OrderItem(UUID.randomUUID(), BigDecimal.ONE, BigDecimal.ONE);
-        return Order.rehydrate(UUID.randomUUID(), status, List.of(item), null, OLD_TIMESTAMP, OLD_TIMESTAMP);
+        UUID orderId = UUID.randomUUID();
+        OrderItem item = new OrderItem(orderId, UUID.randomUUID(), BigDecimal.ONE, BigDecimal.ONE);
+        return Order.rehydrate(orderId, status, List.of(item), null, OLD_TIMESTAMP, OLD_TIMESTAMP);
     }
 
     @Test
     void calculatesTotalsAndProtectsItems() {
-        OrderItem item = new OrderItem(UUID.randomUUID(), new BigDecimal("1.5"), new BigDecimal("2.50"));
+        UUID orderId = UUID.randomUUID();
+        OrderItem item = new OrderItem(orderId, UUID.randomUUID(), new BigDecimal("1.5"), new BigDecimal("2.50"));
         List<OrderItem> source = new ArrayList<>(List.of(item));
-        Order order = new Order(source);
+        Order order = new Order(orderId, source);
         source.clear();
 
         assertEquals(0, new BigDecimal("3.750").compareTo(item.getTotalAmount()));
@@ -147,10 +151,11 @@ class OrderTest {
         UUID orderId = UUID.randomUUID();
         Instant created = Instant.parse("2025-01-01T00:00:00Z");
         Instant updated = created.plusSeconds(1);
-        OrderItem item = OrderItem.rehydrate(itemId, UUID.randomUUID(), BigDecimal.ONE, BigDecimal.TEN, created);
+        OrderItem item = OrderItem.rehydrate(itemId, orderId, UUID.randomUUID(), BigDecimal.ONE, BigDecimal.TEN, created);
         Order order = Order.rehydrate(orderId, OrderStatus.DELIVERED, List.of(item), 2L, created, updated);
 
         assertEquals(itemId, item.getId());
+        assertEquals(orderId, item.getOrderId());
         assertEquals(created, item.getCreatedAt());
         assertEquals(orderId, order.getId());
         assertEquals(OrderStatus.DELIVERED, order.getStatus());
@@ -163,9 +168,14 @@ class OrderTest {
     @Test
     void rejectsInvalidItemsAndEmptyOrders() {
         UUID productId = UUID.randomUUID();
-        assertThrows(IllegalArgumentException.class, () -> new OrderItem(productId, BigDecimal.ZERO, BigDecimal.ONE));
-        assertThrows(IllegalArgumentException.class, () -> new OrderItem(productId, BigDecimal.ONE, BigDecimal.ONE.negate()));
-        assertThrows(IllegalArgumentException.class, () -> new Order(List.of()));
-        assertThrows(NullPointerException.class, () -> new OrderItem(null, BigDecimal.ONE, BigDecimal.ONE));
+        UUID orderId = UUID.randomUUID();
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, BigDecimal.ZERO, BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, BigDecimal.ONE, BigDecimal.ONE.negate()));
+        assertThrows(IllegalArgumentException.class, () -> new Order(UUID.randomUUID(), List.of()));
+        assertThrows(NullPointerException.class, () -> new OrderItem(orderId, null, BigDecimal.ONE, BigDecimal.ONE));
+        assertThrows(NullPointerException.class, () -> new OrderItem(null, productId, BigDecimal.ONE, BigDecimal.ONE));
+        OrderItem item = new OrderItem(orderId, productId, BigDecimal.ONE, BigDecimal.ONE);
+        assertThrows(IllegalArgumentException.class, () -> new Order(UUID.randomUUID(), List.of(item)));
+        assertThrows(IllegalArgumentException.class, () -> Order.rehydrate(UUID.randomUUID(), WAITING_PAYMENT, List.of(item), null, Instant.now(), Instant.now()));
     }
 }

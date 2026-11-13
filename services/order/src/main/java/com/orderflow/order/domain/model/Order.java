@@ -15,8 +15,8 @@ public class Order {
     private final Instant createdAt;
     private  Instant updatedAt;
 
-    public Order(List<OrderItem> items) {
-        this(UUID.randomUUID(), OrderStatus.WAITING_PAYMENT, items, null, Instant.now());
+    public Order(UUID id, List<OrderItem> items) {
+        this(id, OrderStatus.WAITING_PAYMENT, items, null, Instant.now());
     }
 
     private Order(UUID id, OrderStatus status, List<OrderItem> items, Long version, Instant now) {
@@ -30,6 +30,8 @@ public class Order {
         this.items = List.copyOf(Objects.requireNonNull(items, "Items cannot be null"));
         if (this.items.isEmpty())
             throw new IllegalArgumentException("Order must contain at least one item");
+        if (this.items.stream().anyMatch(item -> !this.id.equals(item.getOrderId())))
+            throw new IllegalArgumentException("All items must belong to the order");
         this.version = version;
         this.totalAmount = this.items.stream().map(OrderItem::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
