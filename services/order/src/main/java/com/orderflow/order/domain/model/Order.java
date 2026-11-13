@@ -8,12 +8,12 @@ import java.util.UUID;
 
 public class Order {
     private final UUID id;
-    private final OrderStatus status;
+    private OrderStatus status;
     private final List<OrderItem> items;
     private final Long version;
     private final BigDecimal totalAmount;
     private final Instant createdAt;
-    private final Instant updatedAt;
+    private  Instant updatedAt;
 
     public Order(List<OrderItem> items) {
         this(UUID.randomUUID(), OrderStatus.WAITING_PAYMENT, items, null, Instant.now());
@@ -41,6 +41,46 @@ public class Order {
                                   Instant createdAt, Instant updatedAt) {
         return new Order(id, status, items, version, createdAt, updatedAt);
     }
+
+    public void markWaitingDelivery() {
+        transitionFrom(OrderStatus.WAITING_PAYMENT, OrderStatus.WAITING_DELIVERY);
+    }
+
+    public void startDelivery() {
+        transitionFrom(OrderStatus.WAITING_DELIVERY, OrderStatus.IN_DELIVERY);
+    }
+
+    public void deliver() {
+        transitionFrom(OrderStatus.IN_DELIVERY, OrderStatus.DELIVERED);
+    }
+
+    public void cancel() {
+        transitionFrom(OrderStatus.WAITING_PAYMENT, OrderStatus.CANCELLED);
+    }
+
+    public void fail() {
+        if (status == OrderStatus.DELIVERED ||
+                status == OrderStatus.CANCELLED ||
+                status == OrderStatus.FAILED) {
+            throw new IllegalStateException(
+                    "Cannot fail order from " + status + " to FAILED"
+            );
+        }
+        this.status = OrderStatus.FAILED;
+        updateTimestamp();
+    }
+
+    private void transitionFrom(OrderStatus expected, OrderStatus next) {
+        if (status != expected)
+            throw new IllegalStateException("Cannot transition order from " + status + " to " + next);
+        this.status = next;
+        updateTimestamp();
+    }
+
+    private void updateTimestamp() {
+        this.updatedAt = Instant.now();
+    }
+
 
     public UUID getId() { return id; }
     public OrderStatus getStatus() { return status; }
