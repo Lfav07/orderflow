@@ -30,6 +30,18 @@ class InventoryUseCasesTest {
     }
 
     @Test
+    void productPriceLookupReturnsCurrentPriceAndRejectsNullCommand() {
+        Fixture f = new Fixture();
+        Product product = f.product("Coffee", "4");
+        product.changePricePerUnit(new BigDecimal("12.50"));
+        GetProductPriceUseCase useCase = new GetProductPriceUseCase(f.products);
+
+        assertEquals(new BigDecimal("12.50"), useCase.execute(new ProductIdCommand(product.getId())));
+        assertThrows(NullPointerException.class, () -> useCase.execute(null));
+        assertEquals(0, f.productSaves);
+    }
+
+    @Test
     void listingRejectsInvalidPaginationBeforeRepositoryCall() {
         Fixture f = new Fixture();
         assertThrows(IllegalArgumentException.class, () -> new ListProductsUseCase(f.products).execute(new ListProductsCommand(-1, 2)));

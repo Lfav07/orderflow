@@ -30,3 +30,17 @@ service StockService {
   rpc ReturnStock(StockOperationRequest)
       returns (StockOperationResponse);
 }
+
+message GetProductPriceRequest {
+  string product_id = 1;
+}
+
+message GetProductPriceResponse {
+  string product_id = 1;
+  string unit_price = 2;
+}
+
+service ProductService {
+  rpc GetProductPrice(GetProductPriceRequest)
+      returns (GetProductPriceResponse);
+}

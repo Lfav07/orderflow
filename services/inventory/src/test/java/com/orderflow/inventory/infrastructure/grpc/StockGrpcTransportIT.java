@@ -44,16 +44,57 @@ class StockGrpcTransportIT extends PostgresTestSupport {
 
     private ManagedChannel channel;
     private com.orderflow.inventory.grpc.StockServiceGrpc.StockServiceBlockingStub stub;
+    private com.orderflow.inventory.grpc.ProductServiceGrpc.ProductServiceBlockingStub productStub;
 
     @BeforeEach
     void connectToInProcessServer() {
         channel = InProcessChannelBuilder.forName("inventory-error-tests").directExecutor().build();
         stub = com.orderflow.inventory.grpc.StockServiceGrpc.newBlockingStub(channel);
+        productStub = com.orderflow.inventory.grpc.ProductServiceGrpc.newBlockingStub(channel);
     }
 
     @AfterEach
     void closeChannel() {
         if (channel != null) channel.shutdownNow();
+    }
+
+    @Test
+    void productPriceRpcReturnsPersistedDecimalPrice() {
+        Product product = saveProduct("10");
+        product.changePricePerUnit(new BigDecimal("12.50"));
+        products.save(product);
+
+        var response = productStub.getProductPrice(priceRequest(product.getId().toString()));
+
+        assertEquals(product.getId().toString(), response.getProductId());
+        assertEquals(0, new BigDecimal("12.50").compareTo(new BigDecimal(response.getUnitPrice())));
+    }
+
+    @Test
+    void productPriceRpcMapsUnknownAndMalformedIds() {
+        StatusRuntimeException missing = assertThrows(StatusRuntimeException.class,
+                () -> productStub.getProductPrice(priceRequest(UUID.randomUUID().toString())));
+        assertEquals(Status.Code.NOT_FOUND, missing.getStatus().getCode());
+        assertSafeDescription(missing, "ProductNotFoundException");
+
+        for (String id : List.of("bad-id", "")) {
+            StatusRuntimeException invalid = assertThrows(StatusRuntimeException.class,
+                    () -> productStub.getProductPrice(priceRequest(id)));
+            assertEquals(Status.Code.INVALID_ARGUMENT, invalid.getStatus().getCode());
+            assertSafeDescription(invalid, "IllegalArgumentException");
+        }
+    }
+
+    @Test
+    void productPriceRpcHidesUnexpectedFailures() {
+        StatusRuntimeException error = assertThrows(StatusRuntimeException.class,
+                () -> productStub.getProductPrice(priceRequest(TRIGGER_ID.toString())));
+        assertEquals(Status.Code.INTERNAL, error.getStatus().getCode());
+        assertSafeDescription(error, SENTINEL);
+    }
+
+    private static com.orderflow.inventory.grpc.GetProductPriceRequest priceRequest(String id) {
+        return com.orderflow.inventory.grpc.GetProductPriceRequest.newBuilder().setProductId(id).build();
     }
 
     @Test
