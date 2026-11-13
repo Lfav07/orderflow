@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface OrderItemRepository {
+    OrderItem save(OrderItem item);
+
+    List<OrderItem> saveAll(List<OrderItem> items);
+
     OrderItem findById(UUID id);
 
     List<OrderItem> findAllByOrderId(UUID orderId);
