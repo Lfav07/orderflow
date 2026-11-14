@@ -1,3 +1,25 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: order
+  grpc:
+    client:
+      channel:
+        inventory:
+          target: ${INVENTORY_GRPC_TARGET:static://localhost:9090}
+          default:
+            deadline: ${INVENTORY_GRPC_DEADLINE:5s}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orderflow-order
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
