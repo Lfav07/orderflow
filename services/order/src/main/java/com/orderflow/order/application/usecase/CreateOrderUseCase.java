@@ -34,8 +34,7 @@ public class CreateOrderUseCase {
         if (items.isEmpty()) throw new IllegalArgumentException("Order must contain at least one item");
         for (OrderItemCommand item : items) {
             Objects.requireNonNull(item.productId(), "Product id cannot be null");
-            Objects.requireNonNull(item.quantity(), "Quantity cannot be null");
-            if (item.quantity().signum() <= 0) throw new IllegalArgumentException("Quantity must be greater than zero");
+            OrderItem.normalizeQuantity(item.quantity());
         }
 
         UUID orderId = UUID.randomUUID();

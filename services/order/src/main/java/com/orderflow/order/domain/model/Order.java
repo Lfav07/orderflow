@@ -35,6 +35,8 @@ public class Order {
         this.version = version;
         this.totalAmount = this.items.stream().map(OrderItem::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (this.totalAmount.precision() > 15)
+            throw new IllegalArgumentException("Order total exceeds supported precision");
         this.createdAt = Objects.requireNonNull(createdAt, "Created at cannot be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "Updated at cannot be null");
     }

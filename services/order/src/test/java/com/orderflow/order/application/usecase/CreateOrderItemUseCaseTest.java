@@ -21,11 +21,11 @@ class CreateOrderItemUseCaseTest {
     void createsItemWithInventoryPriceSnapshot() {
         var quantity = new BigDecimal("2.5");
         var item = useCase.execute(new CreateOrderItemCommand(orderId, productId, quantity));
-        assertEquals(new CheckStockAvailabilityRequest(productId.toString(), "2.5"), inventory.stockRequest);
+        assertEquals(new CheckStockAvailabilityRequest(productId.toString(), "2.500"), inventory.stockRequest);
         assertEquals(new GetProductPriceRequest(productId.toString()), inventory.priceRequest);
         assertEquals(orderId, item.getOrderId());
         assertEquals(productId, item.getProductId());
-        assertEquals(quantity, item.getQuantity());
+        assertEquals(new BigDecimal("2.500"), item.getQuantity());
         assertEquals(new BigDecimal("3.20"), item.getUnitPrice());
         assertEquals(0, new BigDecimal("8.00").compareTo(item.getTotalAmount()));
     }
@@ -46,6 +46,7 @@ class CreateOrderItemUseCaseTest {
         assertThrows(NullPointerException.class, () -> useCase.execute(new CreateOrderItemCommand(orderId, productId, null)));
         assertThrows(IllegalArgumentException.class, () -> useCase.execute(new CreateOrderItemCommand(orderId, productId, BigDecimal.ZERO)));
         assertThrows(IllegalArgumentException.class, () -> useCase.execute(new CreateOrderItemCommand(orderId, productId, BigDecimal.ONE.negate())));
+        assertThrows(IllegalArgumentException.class, () -> useCase.execute(new CreateOrderItemCommand(orderId, productId, new BigDecimal("0.0004"))));
         assertNull(inventory.stockRequest);
         assertNull(inventory.priceRequest);
     }

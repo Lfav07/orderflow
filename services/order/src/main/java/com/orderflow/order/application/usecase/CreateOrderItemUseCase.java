@@ -21,18 +21,15 @@ public class CreateOrderItemUseCase {
         Objects.requireNonNull(command, "Command cannot be null");
         Objects.requireNonNull(command.orderId(), "Order id cannot be null");
         Objects.requireNonNull(command.productId(), "Product id cannot be null");
-        Objects.requireNonNull(command.quantity(), "Quantity cannot be null");
-        if (command.quantity().signum() <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
+        BigDecimal quantity = OrderItem.normalizeQuantity(command.quantity());
 
-        CheckStockAvailabilityRequest request = new CheckStockAvailabilityRequest(command.productId().toString(), command.quantity().toPlainString());
+        CheckStockAvailabilityRequest request = new CheckStockAvailabilityRequest(command.productId().toString(), quantity.toPlainString());
         boolean hasStock = inventoryGateway.checkStockAvailability(request).available();
         if (!hasStock) {
             throw new InsufficientStockException("Insufficient stock for product " + command.productId());
         }
         GetProductPriceRequest productPriceRequest = new GetProductPriceRequest(command.productId().toString());
         BigDecimal currentPricePerUnit = new BigDecimal(inventoryGateway.getProductPrice(productPriceRequest).unitPrice());
-        return new OrderItem(command.orderId(), command.productId(), command.quantity(), currentPricePerUnit);
+        return new OrderItem(command.orderId(), command.productId(), quantity, currentPricePerUnit);
     }
 }

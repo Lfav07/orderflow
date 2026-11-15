@@ -166,6 +166,33 @@ class OrderTest {
     }
 
     @Test
+    void roundsEachItemToCentsBeforeSummingAndRehydratesConsistently() {
+        UUID orderId = UUID.randomUUID();
+        OrderItem first = new OrderItem(orderId, UUID.randomUUID(), new BigDecimal("0.500"), new BigDecimal("0.01"));
+        OrderItem second = new OrderItem(orderId, UUID.randomUUID(), new BigDecimal("0.500"), new BigDecimal("0.01"));
+        Order order = new Order(orderId, List.of(first, second));
+        assertEquals(new BigDecimal("0.01"), first.getTotalAmount());
+        assertEquals(new BigDecimal("0.02"), order.getTotalAmount());
+        OrderItem loaded = OrderItem.rehydrate(first.getId(), orderId, first.getProductId(), first.getQuantity(),
+                first.getUnitPrice(), first.getCreatedAt());
+        assertEquals(first.getTotalAmount(), loaded.getTotalAmount());
+    }
+
+    @Test
+    void rejectsValuesThatCannotBeStoredExactly() {
+        UUID orderId = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, new BigDecimal("0.0004"), BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, BigDecimal.ONE, new BigDecimal("1.001")));
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, new BigDecimal("10000000000000000"), BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, BigDecimal.ONE, new BigDecimal("10000000000000")));
+        assertThrows(IllegalArgumentException.class, () -> new OrderItem(orderId, productId, new BigDecimal("2"), new BigDecimal("9999999999999.99")));
+        OrderItem maximum = new OrderItem(orderId, productId, BigDecimal.ONE, new BigDecimal("9999999999999.99"));
+        OrderItem cent = new OrderItem(orderId, productId, BigDecimal.ONE, new BigDecimal("0.01"));
+        assertThrows(IllegalArgumentException.class, () -> new Order(orderId, List.of(maximum, cent)));
+    }
+
+    @Test
     void rejectsInvalidItemsAndEmptyOrders() {
         UUID productId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();

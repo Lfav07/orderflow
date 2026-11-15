@@ -1,6 +1,7 @@
 package com.orderflow.order.domain.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,14 +23,34 @@ public class OrderItem {
         this.id = Objects.requireNonNull(id, "Item id cannot be null");
         this.orderId = Objects.requireNonNull(orderId, "Order id cannot be null");
         this.productId = Objects.requireNonNull(productId, "Product id cannot be null");
-        this.quantity = Objects.requireNonNull(quantity, "Quantity cannot be null");
-        this.unitPrice = Objects.requireNonNull(unitPrice, "Unit price cannot be null");
-        if (quantity.compareTo(BigDecimal.ZERO) <= 0)
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        if (unitPrice.compareTo(BigDecimal.ZERO) < 0)
+        this.quantity = normalizeQuantity(quantity);
+        this.unitPrice = exactScale(unitPrice, 2, 15, "Unit price");
+        if (this.unitPrice.signum() < 0)
             throw new IllegalArgumentException("Unit price cannot be negative");
-        this.totalAmount = quantity.multiply(unitPrice);
+        this.totalAmount = this.quantity.multiply(this.unitPrice).setScale(2, RoundingMode.HALF_UP);
+        if (this.totalAmount.precision() > 15)
+            throw new IllegalArgumentException("Item total exceeds supported precision");
         this.createdAt = Objects.requireNonNull(createdAt, "Created at cannot be null");
+    }
+
+    public static BigDecimal normalizeQuantity(BigDecimal quantity) {
+        BigDecimal scaled = exactScale(quantity, 3, 19, "Quantity");
+        if (scaled.signum() <= 0)
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        return scaled;
+    }
+
+    private static BigDecimal exactScale(BigDecimal value, int scale, int precision, String name) {
+        Objects.requireNonNull(value, name + " cannot be null");
+        final BigDecimal scaled;
+        try {
+            scaled = value.setScale(scale, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException(name + " exceeds supported scale of " + scale, exception);
+        }
+        if (scaled.precision() > precision)
+            throw new IllegalArgumentException(name + " exceeds supported precision");
+        return scaled;
     }
 
     public static OrderItem rehydrate(UUID id, UUID orderId, UUID productId, BigDecimal quantity,
