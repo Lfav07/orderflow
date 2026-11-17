@@ -1,0 +1,71 @@
+type Order {
+    id: ID!
+    status: OrderStatus!
+    items: [OrderItem!]!
+    version: Long
+    totalAmount: BigDecimal!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+type OrderItem {
+    id: ID!
+    orderId: ID!
+    productId: ID!
+    quantity: BigDecimal!
+    unitPrice: BigDecimal!
+    totalAmount: BigDecimal!
+    createdAt: DateTime!
+}
+
+input CreateOrderInput {
+    items: [OrderItemInput!]!
+}
+
+input OrderItemInput {
+    productId: ID!
+    quantity: BigDecimal!
+}
+
+input OrderIdInput {
+    id: ID!
+}
+
+input ListOrdersInput {
+    page: Int = 0
+    size: Int = 20
+}
+
+input FilterOrdersInput {
+    status: OrderStatus!
+    page: Int = 0
+    size: Int = 20
+}
+
+type Query {
+    orderById(input: OrderIdInput!): Order
+    listOrders(input: ListOrdersInput!): [Order!]!
+    filterOrders(input: FilterOrdersInput!): [Order!]!
+}
+
+type Mutation {
+    createOrder(input: CreateOrderInput!): Order!
+    markOrderWaitingDelivery(input: OrderIdInput!): Order!
+    startOrderDelivery(input: OrderIdInput!): Order!
+    deliverOrder(input: OrderIdInput!): Order!
+    cancelOrder(input: OrderIdInput!): Order!
+    failOrder(input: OrderIdInput!): Order!
+}
+
+scalar BigDecimal
+scalar DateTime
+scalar Long
+
+enum OrderStatus {
+    WAITING_PAYMENT
+    WAITING_DELIVERY
+    IN_DELIVERY
+    DELIVERED
+    FAILED
+    CANCELLED
+}
