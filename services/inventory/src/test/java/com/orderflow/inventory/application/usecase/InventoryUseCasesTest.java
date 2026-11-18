@@ -61,6 +61,24 @@ class InventoryUseCasesTest {
     }
 
     @Test
+    void inactiveProductIsUnavailableEvenWhenStockIsSufficient() {
+        Fixture f = new Fixture();
+        Product product = f.product("Coffee", "4");
+        CheckStockAvailabilityUseCase useCase = new CheckStockAvailabilityUseCase(f.products);
+        ChangeStockCommand command = new ChangeStockCommand(product.getId(), BigDecimal.ONE);
+
+        assertTrue(useCase.execute(command));
+        product.deactivate();
+        assertFalse(useCase.execute(command));
+        assertThrows(IllegalArgumentException.class,
+                () -> useCase.execute(new ChangeStockCommand(product.getId(), BigDecimal.ZERO)));
+        product.activate();
+        assertTrue(useCase.execute(command));
+        assertEquals(new BigDecimal("4"), product.getQuantityInStock());
+        assertEquals(0, f.productSaves);
+    }
+
+    @Test
     void listingRejectsInvalidPaginationBeforeRepositoryCall() {
         Fixture f = new Fixture();
         assertThrows(IllegalArgumentException.class, () -> new ListProductsUseCase(f.products).execute(new ListProductsCommand(-1, 2)));

@@ -1,5 +1,7 @@
 package com.orderflow.order.domain.model;
 
+import com.orderflow.order.domain.exception.InvalidOrderTransitionException;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -66,7 +68,7 @@ public class Order {
         if (status == OrderStatus.DELIVERED ||
                 status == OrderStatus.CANCELLED ||
                 status == OrderStatus.FAILED) {
-            throw new IllegalStateException(
+            throw new InvalidOrderTransitionException(
                     "Cannot fail order from " + status + " to FAILED"
             );
         }
@@ -76,7 +78,7 @@ public class Order {
 
     private void transitionFrom(OrderStatus expected, OrderStatus next) {
         if (status != expected)
-            throw new IllegalStateException("Cannot transition order from " + status + " to " + next);
+            throw new InvalidOrderTransitionException("Cannot transition order from " + status + " to " + next);
         this.status = next;
         updateTimestamp();
     }

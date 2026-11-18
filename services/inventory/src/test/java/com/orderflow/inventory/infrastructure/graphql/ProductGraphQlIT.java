@@ -229,6 +229,22 @@ class ProductGraphQlIT extends PostgresTestSupport {
     }
 
     @Test
+    void missingStockOperationHasNotFoundCode() {
+        var response = graphQlTester.document("""
+                query($input: GetStockOperationByIdInput!) { stockOperationById(input: $input) { operationId } }
+                """).variable("input", Map.of("operationId", UUID.randomUUID().toString())).execute();
+        assertGraphQlError(response, "NOT_FOUND", "StockOperationNotFoundException", false);
+    }
+
+    @Test
+    void invalidUuidHasBadRequestCode() {
+        var response = graphQlTester.document("""
+                query($input: GetProductByIdInput!) { productById(input: $input) { id } }
+                """).variable("input", Map.of("id", "not-a-uuid")).execute();
+        assertGraphQlError(response, "BAD_REQUEST", "BindException", false);
+    }
+
+    @Test
     void insufficientStockHasConflictCodeAndLeavesStockUnchanged() {
         Product product = saveProduct("INSUFFICIENT-" + UUID.randomUUID().toString().substring(0, 8),
                 ProductStatus.ACTIVE, ProductUnit.UNITS, "1");

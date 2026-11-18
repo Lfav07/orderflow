@@ -4,7 +4,7 @@ import com.orderflow.order.application.command.TransitionOrderCommand;
 import com.orderflow.order.domain.model.Order;
 import com.orderflow.order.domain.repository.OrderRepository;
 
-import java.util.NoSuchElementException;
+import com.orderflow.order.domain.exception.OrderNotFoundException;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -16,7 +16,7 @@ final class OrderTransition {
         var id = Objects.requireNonNull(command.id(), "Order id cannot be null");
         Order order = repository.findById(id);
         if (order == null) {
-            throw new NoSuchElementException("Order not found: " + id);
+            throw new OrderNotFoundException(id);
         }
         transition.accept(order);
         return repository.save(order);

@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @GraphQlTest(OrderGraphQlController.class)
-@Import(GraphQlConfig.class)
+@Import({GraphQlConfig.class, OrderGraphQlExceptionResolver.class})
 class OrderGraphQlControllerTest {
     @Autowired GraphQlTester graphQl;
     @MockitoBean GetOrderByIdUseCase getById;
@@ -77,4 +77,42 @@ class OrderGraphQlControllerTest {
                 .variable("input", Map.of("id", id.toString())).execute().errors().verify();
         verify(cancel).execute(new TransitionOrderCommand(id));
     }
+    @Test
+    void expectedFailuresHaveStableCodesAndSafeMessages() {
+        doThrow(new IllegalArgumentException("private detail")).when(create).execute(any());
+        assertError("mutation { createOrder(input:{items:[]}) { id } }", "BAD_REQUEST", "createOrder");
+
+        doThrow(io.grpc.Status.NOT_FOUND.withDescription("private detail").asRuntimeException()).when(create).execute(any());
+        assertError("mutation { createOrder(input:{items:[]}) { id } }", "NOT_FOUND", "createOrder");
+
+        doThrow(new com.orderflow.order.application.gateway.InsufficientStockException("private detail")).when(create).execute(any());
+        assertError("mutation { createOrder(input:{items:[]}) { id } }", "CONFLICT", "createOrder");
+
+        doThrow(new com.orderflow.order.domain.exception.InvalidOrderTransitionException("private detail")).when(cancel).execute(any());
+        assertError("mutation { cancelOrder(input:{id:\"00000000-0000-0000-0000-000000000000\"}) { id } }", "CONFLICT", "cancelOrder");
+
+        doThrow(new com.orderflow.order.domain.exception.OrderNotFoundException(UUID.randomUUID())).when(cancel).execute(any());
+        assertError("mutation { cancelOrder(input:{id:\"00000000-0000-0000-0000-000000000000\"}) { id } }", "NOT_FOUND", "cancelOrder");
+
+        doThrow(io.grpc.Status.UNAVAILABLE.withDescription("private detail").asRuntimeException()).when(create).execute(any());
+        assertError("mutation { createOrder(input:{items:[]}) { id } }", "UPSTREAM_ERROR", "createOrder");
+
+        doThrow(new RuntimeException("private detail")).when(create).execute(any());
+        assertError("mutation { createOrder(input:{items:[]}) { id } }", "INTERNAL_ERROR", "createOrder");
+    }
+
+    @Test
+    void invalidUuidIsReportedAsBadRequest() {
+        assertError("mutation { cancelOrder(input:{id:\"not-a-uuid\"}) { id } }", "BAD_REQUEST", "cancelOrder");
+    }
+
+    private void assertError(String document, String code, String path) {
+        graphQl.document(document).execute().errors().satisfy(errors -> {
+            assertEquals(1, errors.size());
+            assertEquals(code, errors.getFirst().getExtensions().get("code"));
+            assertEquals(path, errors.getFirst().getPath());
+            assertFalse(errors.getFirst().getMessage().contains("private detail"));
+        });
+    }
+
 }

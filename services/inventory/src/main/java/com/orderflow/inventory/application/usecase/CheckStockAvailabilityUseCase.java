@@ -1,6 +1,8 @@
 package com.orderflow.inventory.application.usecase;
 
 import com.orderflow.inventory.application.command.ChangeStockCommand;
+import com.orderflow.inventory.domain.model.Product;
+import com.orderflow.inventory.domain.model.ProductStatus;
 import com.orderflow.inventory.domain.repository.ProductRepository;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ public class CheckStockAvailabilityUseCase {
 
     public boolean execute(ChangeStockCommand command) {
         Objects.requireNonNull(command, "Command cannot be null");
-        return productRepository.findById(command.id()).hasEnoughStock(command.quantity());
+        Product product = productRepository.findById(command.id());
+        boolean enoughStock = product.hasEnoughStock(command.quantity());
+        return product.getStatus() == ProductStatus.ACTIVE && enoughStock;
     }
 }

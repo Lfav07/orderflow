@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.orderflow.order.domain.exception.OrderNotFoundException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,7 +56,7 @@ public class MarkOrderWaitingDeliveryUseCase {
 
     private Order findOrder(UUID id) {
         Order order = repository.findById(id);
-        if (order == null) throw new NoSuchElementException("Order not found: " + id);
+        if (order == null) throw new OrderNotFoundException(id);
         return order;
     }
 

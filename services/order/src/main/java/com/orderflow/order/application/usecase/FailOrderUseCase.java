@@ -16,7 +16,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import com.orderflow.order.domain.exception.OrderNotFoundException;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ public class FailOrderUseCase {
         Objects.requireNonNull(command, "Command cannot be null");
         UUID id = Objects.requireNonNull(command.id(), "Order id cannot be null");
         Order order = repository.findById(id);
-        if (order == null) throw new NoSuchElementException("Order not found: " + id);
+        if (order == null) throw new OrderNotFoundException(id);
 
         boolean returnItems = order.getStatus() == OrderStatus.WAITING_DELIVERY
                 || order.getStatus() == OrderStatus.IN_DELIVERY;

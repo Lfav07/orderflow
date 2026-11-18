@@ -4,6 +4,7 @@ import com.orderflow.inventory.domain.exception.InsufficientStockException;
 import com.orderflow.inventory.domain.exception.LengthExceededException;
 import com.orderflow.inventory.domain.exception.NegativePriceException;
 import com.orderflow.inventory.domain.exception.ProductNotFoundException;
+import com.orderflow.inventory.domain.exception.StockOperationNotFoundException;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindException;
 
 import java.util.Map;
 
@@ -25,13 +27,17 @@ public class InventoryGraphQlExceptionResolver extends DataFetcherExceptionResol
         if (exception instanceof ProductNotFoundException) {
             return error(environment, ErrorType.NOT_FOUND, "NOT_FOUND", "Product was not found.");
         }
+        if (exception instanceof StockOperationNotFoundException) {
+            return error(environment, ErrorType.NOT_FOUND, "NOT_FOUND", "Stock operation was not found.");
+        }
         if (exception instanceof InsufficientStockException) {
             return error(environment, ErrorType.BAD_REQUEST, "CONFLICT", "The requested stock change cannot be applied.");
         }
         if (exception instanceof NegativePriceException
                 || exception instanceof LengthExceededException
                 || exception instanceof IllegalArgumentException
-                || exception instanceof ConstraintViolationException) {
+                || exception instanceof ConstraintViolationException
+                || exception instanceof BindException) {
             return error(environment, ErrorType.BAD_REQUEST, "BAD_REQUEST", "The request contains invalid values.");
         }
 
