@@ -1,31 +1,96 @@
 services:
-  jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile.jenkins
-    container_name: orderflow-jenkins
-    restart: unless-stopped
-    ports:
-      - "8083:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-  docker-agent:
-    profiles: [agent]
-    build:
-      context: .
-      dockerfile: Dockerfile.jenkins-agent
-    restart: unless-stopped
-    init: true
-    group_add:
-      - "${DOCKER_GID:-0}"
+  inventory-db:
+    image: postgres:17
     environment:
-      JENKINS_URL: http://jenkins:8080
-      JENKINS_AGENT_NAME: docker-agent
-      JENKINS_SECRET: ${JENKINS_AGENT_SECRET:-}
-      JENKINS_WEB_SOCKET: "true"
-      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+      POSTGRES_DB: orderflow-inventory
+      POSTGRES_USER: ${DB_USERNAME:-orderflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orderflow-local}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - inventory_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  order-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: orderflow-order
+      POSTGRES_USER: ${DB_USERNAME:-orderflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orderflow-local}
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE: inventory
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: ${DB_USERNAME:-orderflow}
+      DB_PASSWORD: ${DB_PASSWORD:-orderflow-local}
+    ports:
+      - "${INVENTORY_HTTP_PORT:-8080}:8081"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+
+  order:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE: order
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: ${DB_USERNAME:-orderflow}
+      DB_PASSWORD: ${DB_PASSWORD:-orderflow-local}
+    ports:
+      - "${ORDER_HTTP_PORT:-8081}:8080"
+    depends_on:
+      order-db:
+        condition: service_healthy
+      inventory:
+        condition: service_started
+
+#   jenkins:
+#     profiles: [ci]
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.jenkins
+#     container_name: orderflow-jenkins
+#     restart: unless-stopped
+#     ports:
+#       - "8083:8080"
+#       - "50000:50000"
+#     volumes:
+#       - jenkins_home:/var/jenkins_home
+#   docker-agent:
+#     profiles: [agent]
+#     build:
+#       context: .
+#       dockerfile: Dockerfile.jenkins-agent
+#     restart: unless-stopped
+#     init: true
+#     group_add:
+#       - "${DOCKER_GID:-0}"
+#     environment:
+#       JENKINS_URL: http://jenkins:8080
+#       JENKINS_AGENT_NAME: docker-agent
+#       JENKINS_SECRET: ${JENKINS_AGENT_SECRET:-}
+#       JENKINS_WEB_SOCKET: "true"
+#       TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock
 volumes:
-  jenkins_home:
+  inventory_db_data:
+  order_db_data:
+  # jenkins_home:

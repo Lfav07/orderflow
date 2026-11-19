@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://order-db:5432/orderflow-order
+  grpc:
+    client:
+      channel:
+        inventory:
+          target: ${INVENTORY_GRPC_TARGET:static://inventory:9090}
+server:
+  port: 8080

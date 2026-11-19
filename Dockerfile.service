@@ -1,0 +1,12 @@
+FROM maven:3.9.14-eclipse-temurin-25 AS build
+ARG SERVICE
+WORKDIR /build
+COPY services/${SERVICE}/pom.xml ./pom.xml
+COPY services/${SERVICE}/src ./src
+RUN mvn -B -DskipTests package && cp target/*.jar /build/application.jar
+
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+COPY --from=build /build/application.jar ./application.jar
+USER 10001:10001
+ENTRYPOINT ["java", "-jar", "/app/application.jar"]

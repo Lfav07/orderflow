@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://inventory-db:5432/orderflow-inventory
+server:
+  port: 8081
