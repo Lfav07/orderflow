@@ -1,0 +1,48 @@
+name: Order CI
+
+on:
+  push:
+    paths:
+      - 'services/order/**'
+      - '.github/workflows/order-ci.yml'
+  pull_request:
+    paths:
+      - 'services/order/**'
+      - '.github/workflows/order-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: services/order
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: services/order/pom.xml
+
+      - name: Check Docker
+        run: docker info
+
+      - name: Build and test order
+        working-directory: services/order
+        run: mvn -B clean verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-test-reports
+          path: |
+            services/order/target/surefire-reports/TEST-*.xml
+            services/order/target/failsafe-reports/TEST-*.xml
+          if-no-files-found: ignore
